@@ -16,7 +16,7 @@ object AccessModifiers {
   val aKid: Kid = new Kid("David", 5)
 
   // complication
-  class KidWithParents(override val name: String, age: Int, momName: String, dadName: String) extends Person {
+  class KidWithParents(override val name: String, age: Int, momName: String, dadName: String) extends Person(name) {
     val mom: Person = new Person(momName)
     val dad: Person = new Person(dadName)
 
