@@ -8,7 +8,7 @@ abstract class LList {
   def head: Int
   def tail: LList
   def isEmpty: Boolean
-  def add(element: Int): LList = {
+  def add(element: Int): Cons = {
     new Cons(element, this)
   }
 }
@@ -38,6 +38,8 @@ object LListTest {
     // println(empty)
     val first3Numbers: Cons = new Cons(1, new Cons(2, new Cons(3, empty)))
     println(s"$first3Numbers")
+    val first3Numbers_v2: Cons = empty.add(1).add(2).add(3)
+    println(s"$first3Numbers_v2")
 
   }
 }
