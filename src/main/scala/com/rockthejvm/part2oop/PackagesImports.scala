@@ -20,7 +20,7 @@ object PackagesImports { // top-level
 
   // import everything
   import com.rockthejvm.practice.*
-  val aPredicate: Predicate[Int] = ???
+  // val aPredicate: Predicate[Int] = ???
 
   // import multiple symbols
   import PhysicsConstants.{SPEED_OF_LIGHT, EARTH_GRAVITY}
