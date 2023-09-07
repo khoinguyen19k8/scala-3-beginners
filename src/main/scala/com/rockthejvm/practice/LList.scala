@@ -83,10 +83,20 @@ case class Cons[A](override val head: A, override val tail: LList[A]) extends LL
   }
 }
 
+object LList {
+  @tailrec
+  def find[A](list: LList[A], predicate: Predicate[A]): A = {
+    if (predicate.test(list.head)) list.head
+    else if (list.isEmpty) throw new NoSuchElementException("No such element satisfied the predicate found")
+    else find(list.tail, predicate)
+  }
+}
+
 
 object LListTest {
   def main(args: Array[String]): Unit = {
 
+    // LList testing
     val empty = EmptyLList[Int]()
     val emptyString = EmptyLList[String]()
     // println(empty)
@@ -99,15 +109,35 @@ object LListTest {
     println(s"$first3Strings")
     println(s"$first3Strings_v2")
 
+    // map testing
     val doubler: Transformer[Int, Int] = new Doubler
     val numbersDoubled = first3Numbers.map(doubler)
     val numbersNested = first3Numbers.map(new DoublerList)
-    val numbersOnlyEven = first3Numbers.filter(new EvenPredicate)
-    val numbersFlatted = first3Numbers.flatMap(new DoublerList)
     println(numbersDoubled)
     println(numbersNested)
+
+    // filter testing
+    val numbersOnlyEven = first3Numbers.filter(new EvenPredicate)
     println(numbersOnlyEven)
+
+    // flatMap testing
+    val numbersFlatted = first3Numbers.flatMap(new DoublerList)
     println(numbersFlatted)
+
+    // find testing
+    val oddPredicate = new Predicate[Int] {
+      override def test(element: Int): Boolean = {
+        element % 2 != 0
+      }
+    }
+    val over100Predicate = new Predicate[Int] {
+      override def test(element: Int): Boolean = {
+        element > 100
+      }
+    }
+    val numbersSeq: LList[Int] = Cons(14, Cons(17, Cons(2, EmptyLList[Int]())))
+    println(LList.find(numbersSeq, oddPredicate))
+    println(LList.find(numbersSeq, over100Predicate))
 
   }
 }
