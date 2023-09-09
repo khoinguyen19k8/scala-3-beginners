@@ -115,23 +115,15 @@ object LListTest {
     println(s"$first3Strings_v2")
 
     // map testing
-    val doubler = new (Int => Int) {
-      override def apply(v1: Int): Int = v1 * 2
-    }
-    val DoublerList = new (Int => LList[Int]) {
-      override def apply(value: Int): LList[Int] = {
-        Cons(value, Cons(value + 1, EmptyLList[Int]()))
-      }
-    }
+    val doubler: Int => Int = _ * 2
+    val DoublerList: Int => LList[Int] = value => Cons(value, Cons(value + 1, EmptyLList[Int]()))
     val numbersDoubled = first3Numbers.map(doubler)
     val numbersNested = first3Numbers.map(DoublerList)
     println(numbersDoubled)
     println(numbersNested)
 
     // filter testing
-    val evenPredicate = new (Int => Boolean) {
-      override def apply(v1: Int): Boolean = (v1 % 2 == 0)
-    }
+    val evenPredicate: Int => Boolean = (_ % 2 == 0)
     val numbersOnlyEven = first3Numbers.filter(evenPredicate)
     println(numbersOnlyEven)
 
@@ -140,19 +132,16 @@ object LListTest {
     println(numbersFlatted)
 
     // find testing
-    val oddPredicate = new (Int => Boolean){
-      override def apply(element: Int): Boolean = {
-        element % 2 != 0
-      }
-    }
-    val over100Predicate = new (Int => Boolean){
-      override def apply(element: Int): Boolean = {
-        element > 100
-      }
-    }
+    val oddPredicate: Int => Boolean = (_ % 2 != 0)
+    val over100Predicate: Int => Boolean = (_ > 100)
     val numbersSeq: LList[Int] = Cons(14, Cons(17, Cons(2, EmptyLList[Int]())))
     println(LList.find(numbersSeq, oddPredicate))
-    println(LList.find(numbersSeq, over100Predicate))
+
+    try {
+      println(LList.find(numbersSeq, over100Predicate))
+    } catch {
+      case e: NoSuchElementException => println("No such element satisfied the filter")
+    }
 
   }
 }

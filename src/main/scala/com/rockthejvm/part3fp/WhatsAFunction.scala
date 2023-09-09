@@ -36,10 +36,8 @@ object WhatsAFunction {
     override def apply(v1: String, v2: String): String = v1 + v2
   }
 
-  val superAdder = new Function1[Int, Function1[Int, Int]] {
-    override def apply(x: Int) = new Function1[Int, Int] {
-      override def apply(y: Int): Int = x + y
-    }
+  val superAdder: Int => (Int => Int) = { (x: Int) =>
+    (y: Int) => x + y
   }
 
   val adder2 = superAdder(2)
@@ -52,6 +50,7 @@ object WhatsAFunction {
   // all functions are instances of FunctionX with apply methods
   def main(args: Array[String]): Unit = {
     println(concatString("Scala ", "Python"))
+    println(anAddition_v3)
 
   }
 }
