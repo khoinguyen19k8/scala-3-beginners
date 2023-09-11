@@ -40,11 +40,32 @@ object HOFsCurrying {
   val standardFormat: (Double => String) = curriedFormatter("%4.2f")
   val preciseFormat: (Double => String) = curriedFormatter("%10.8f")
 
+  def toCurry[A, B, C](f: (A, B) => C): A => B => C=
+    x => y => f(x, y)
 
+  val supperAdder_v2 = toCurry[Int, Int, Int](_ + _)
+
+  def fromCurry[A, B, C](f: A => B => C): (A, B) => C =
+    (x, y) => f(x)(y)
+
+  val simpleAdder = fromCurry(superAdder)
+
+  def compose[A, B, C](f: B => C, g: A => B): A => C =
+    x => f(g(x))
+
+  def andThen[A, B, C](f: A => B, g: B => C): A => C =
+    x => g(f(x))
+
+  val incrementer = (x: Int) => x + 1
+  val doubler = (x: Int) => 2 * x
+  val composedApplication = compose(incrementer, doubler)
+  val aSequencedApplication = andThen(incrementer, doubler)
   def main(args: Array[String]): Unit =
     println(tenThousand)
     println(oneHundred)
     println(standardFormat(Math.PI))
     println(preciseFormat(Math.PI))
+    println(composedApplication(14)) // 29
+    println(aSequencedApplication(14)) // 30
 
 }
