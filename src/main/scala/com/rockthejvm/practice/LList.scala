@@ -14,7 +14,7 @@ abstract class LList[A] {
   }
 
   // concatenation
-  infix def ++(anotherList: LList[A]): LList[A]
+  infix def ++(another: LList[A]): LList[A]
 
   // map, filter, flatMap
   def map[B](transformer: A => B): LList[B]
@@ -27,9 +27,9 @@ abstract class LList[A] {
 
   // forEach, sort, zip, etc
   def foreach(func: A => Unit): Unit
-//  def sort[A](comparisonFunc: (A, A) => Int): LList[A]
-  def zipWith[B](anotherList: LList[A], zipFunc: (A, A) => B): LList[B]
-//  def foldLeft[B](start: B)(foldFunc: (A, B) => B): B
+  def sort(compare: (A, A) => Int): LList[A]
+  def zipWith[B](another: LList[A], zip: (A, A) => B): LList[B]
+  def foldLeft[B](start: B)(operator: (A, B) => B): B
 }
 
 case class EmptyLList[A]() extends LList[A] {
@@ -38,7 +38,7 @@ case class EmptyLList[A]() extends LList[A] {
   override def isEmpty: Boolean = true
   // override def toString: String = "[]"
 
-  override infix def ++(anotherList: LList[A]): LList[A] = anotherList
+  override infix def ++(another: LList[A]): LList[A] = another
 
   override def map[B](transformer: A => B): LList[B] = EmptyLList()
   override def filter(predicate: A => Boolean): LList[A] = this
@@ -48,8 +48,9 @@ case class EmptyLList[A]() extends LList[A] {
   override def apply(index: Int): A = throw new IndexOutOfBoundsException
 
   override def foreach(func: A => Unit): Unit = {}
-
-  override def zipWith[B](anotherList: LList[A], zipFunc: (A, A) => B): LList[B] = EmptyLList[B]()
+  override def sort(compare: (A, A) => Int): LList[A] = this
+  override def zipWith[B](another: LList[A], zip: (A, A) => B): LList[B] = EmptyLList[B]()
+  override def foldLeft[B](start: B)(operator: (A, B) => B): B = start
 
   }
 
@@ -65,8 +66,8 @@ case class Cons[A](override val head: A, override val tail: LList[A]) extends LL
     s"[${concatenateElements(this.tail, s"${this.head}")}]"
   }
 
-  override infix def ++(anotherList: LList[A]): LList[A] = {
-    Cons[A](head, tail ++ anotherList)
+  override infix def ++(another: LList[A]): LList[A] = {
+    Cons[A](head, tail ++ another)
   }
 
   override def map[B](transformer: A => B): LList[B] = {
@@ -100,17 +101,26 @@ case class Cons[A](override val head: A, override val tail: LList[A]) extends LL
     else applyTail(this, index)
 
   override def foreach(func: A => Unit): Unit =
-    @tailrec
-    def foreachTail(current: LList[A], funcEval: Unit): Unit =
-      if (current.isEmpty) {}
-      else foreachTail(current.tail, func(current.head))
+    func(head)
+    tail.foreach(func)
 
-    foreachTail(this, {})
+  override def sort(compare: (A, A) => Int): LList[A] =
+    // insertion sort
+    // compare evaluates to > 0 if arg1 > arg2, 0 if arg1 == arg2
+    def insert(elem: A, sortedList: LList[A]): LList[A] =
+      if (sortedList.isEmpty) Cons(elem, EmptyLList())
+      else if (compare(elem, sortedList.head) <= 0) Cons(elem, sortedList)
+      else Cons(sortedList.head, insert(elem, sortedList.tail))
 
-  override def zipWith[B](anotherList: LList[A], zipFunc: (A, A) => B): LList[B] =
-    if (this.length() != anotherList.length()) throw new RuntimeException("Two lists of different length")
-    else Cons[B](zipFunc(this.head, anotherList.head), this.tail.zipWith(anotherList.tail, zipFunc))
+    val sortedTail = tail.sort(compare)
+    insert(head, sortedTail)
 
+  override def zipWith[B](another: LList[A], zip: (A, A) => B): LList[B] =
+    if (this.length() != another.length()) throw new RuntimeException("Two lists of different length")
+    else Cons[B](zip(this.head, another.head), this.tail.zipWith(another.tail, zip))
+
+  override def foldLeft[B](start: B)(operator: (A, B) => B): B =
+    this.tail.foldLeft(operator(this.head, start))(operator)
 }
 
 object LList {
@@ -182,6 +192,12 @@ object LListTest {
     println("\n# zipWith testing\n")
     val anotherNumbersSeq: LList[Int] = Cons(6, Cons(3, Cons(18, Cons (2, Cons (11, empty)))))
     println(numbersSeq.zipWith(anotherNumbersSeq, (x, y) => x + y))
+
+    println("\n# foldLeft testing\n")
+    println(numbersSeq.foldLeft[Int](0)(_ + _))
+
+    println("\n# sort testing\n")
+    println(numbersSeq.sort(_ - _))
 
 
   }
