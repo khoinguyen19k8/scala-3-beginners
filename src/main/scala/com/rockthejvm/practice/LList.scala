@@ -1,5 +1,6 @@
 package com.rockthejvm.practice
 
+import java.util.Currency
 import scala.annotation.tailrec
 
 // singly linked list
@@ -14,37 +15,23 @@ abstract class LList[A] {
 
   // concatenation
   infix def ++(anotherList: LList[A]): LList[A]
+
+  // map, filter, flatMap
   def map[B](transformer: A => B): LList[B]
   def filter(predicate: A => Boolean): LList[A]
   def flatMap[B](transformer: A => LList[B]): LList[B]
+
+  // apply, length
+  def length(): Int
+  def apply(index: Int): A
+
+  // forEach, sort, zip, etc
+  def foreach(func: A => Unit): Unit
+//  def sort[A](comparisonFunc: (A, A) => Int): LList[A]
+  def zipWith[B](anotherList: LList[A], zipFunc: (A, A) => B): LList[B]
+//  def foldLeft[B](start: B)(foldFunc: (A, B) => B): B
 }
 
-// replace with function types
-
-//trait Predicate[T] {
-//  def test(element: T): Boolean
-//  def apply(element: T): Boolean = {
-//    test(element)
-//  }
-//}
-//
-//class EvenPredicate extends Predicate[Int] {
-//  override def test(element: Int): Boolean =
-//    (element % 2) == 0
-//}
-//
-//trait Transformer[A, B] {
-//  def transform(value: A): B
-//}
-//
-//class Doubler extends Transformer[Int, Int] {
-//  override def transform(value: Int): Int =
-//    value * 2
-//}
-
-//class DoublerList extends Transformer[Int, LList[Int]] {
-//  override def transform(value: Int): LList[Int] = Cons(value, Cons(value + 1, EmptyLList[Int]()))
-//}
 case class EmptyLList[A]() extends LList[A] {
   override def head: A = throw new NoSuchElementException
   override def tail: LList[A] = throw new NoSuchElementException
@@ -56,6 +43,14 @@ case class EmptyLList[A]() extends LList[A] {
   override def map[B](transformer: A => B): LList[B] = EmptyLList()
   override def filter(predicate: A => Boolean): LList[A] = this
   override def flatMap[B](transformer: A => LList[B]): LList[B] = EmptyLList()
+
+  override def length(): Int = 0
+  override def apply(index: Int): A = throw new IndexOutOfBoundsException
+
+  override def foreach(func: A => Unit): Unit = {}
+
+  override def zipWith[B](anotherList: LList[A], zipFunc: (A, A) => B): LList[B] = EmptyLList[B]()
+
   }
 
 
@@ -86,6 +81,36 @@ case class Cons[A](override val head: A, override val tail: LList[A]) extends LL
   override def flatMap[B](transformer: A => LList[B]): LList[B] = {
     transformer(head) ++ tail.flatMap(transformer)
   }
+
+  override def length(): Int =
+    @tailrec
+    def lengthTail(current: LList[A], n: Int): Int =
+      if (current.isEmpty) n
+      else lengthTail(current.tail, n + 1)
+    lengthTail(this, 0)
+
+  override def apply(index: Int): A =
+    @tailrec
+    def applyTail(current: LList[A], index: Int): A =
+      if ((index == 0) && !current.isEmpty) current.head
+      else applyTail(current.tail, index - 1)
+
+    if (index > this.length() - 1) throw new IndexOutOfBoundsException("Index larger than list length")
+    else if (index < 0) throw new IndexOutOfBoundsException("Index smaller than 0")
+    else applyTail(this, index)
+
+  override def foreach(func: A => Unit): Unit =
+    @tailrec
+    def foreachTail(current: LList[A], funcEval: Unit): Unit =
+      if (current.isEmpty) {}
+      else foreachTail(current.tail, func(current.head))
+
+    foreachTail(this, {})
+
+  override def zipWith[B](anotherList: LList[A], zipFunc: (A, A) => B): LList[B] =
+    if (this.length() != anotherList.length()) throw new RuntimeException("Two lists of different length")
+    else Cons[B](zipFunc(this.head, anotherList.head), this.tail.zipWith(anotherList.tail, zipFunc))
+
 }
 
 object LList {
@@ -102,6 +127,7 @@ object LListTest {
   def main(args: Array[String]): Unit = {
 
     // LList testing
+    println("# LList construction testing\n")
     val empty = EmptyLList[Int]()
     val emptyString = EmptyLList[String]()
     // println(empty)
@@ -115,6 +141,7 @@ object LListTest {
     println(s"$first3Strings_v2")
 
     // map testing
+    println("\n# map, filter, flatMap, find testing\n")
     val doubler: Int => Int = _ * 2
     val DoublerList: Int => LList[Int] = value => Cons(value, Cons(value + 1, EmptyLList[Int]()))
     val numbersDoubled = first3Numbers.map(doubler)
@@ -134,14 +161,28 @@ object LListTest {
     // find testing
     val oddPredicate: Int => Boolean = (_ % 2 != 0)
     val over100Predicate: Int => Boolean = (_ > 100)
-    val numbersSeq: LList[Int] = Cons(14, Cons(17, Cons(2, EmptyLList[Int]())))
+    val numbersSeq: LList[Int] = Cons(14, Cons(17, Cons(2, Cons(98, Cons(9, empty)) )))
     println(LList.find(numbersSeq, oddPredicate))
+
+    println("\n# Exception testing\n")
 
     try {
       println(LList.find(numbersSeq, over100Predicate))
     } catch {
       case e: NoSuchElementException => println("No such element satisfied the filter")
     }
+
+    println("\n# apply, length testing")
+    println(s"numbersSeq length: ${numbersSeq.length()}")
+    println(s"numbersSeq elements: ${numbersSeq(0)}, ${numbersSeq(3)}, ${numbersSeq(4)}")
+
+    println("\n# foreach testing\n")
+    numbersSeq.foreach(x=> println(x))
+
+    println("\n# zipWith testing\n")
+    val anotherNumbersSeq: LList[Int] = Cons(6, Cons(3, Cons(18, Cons (2, Cons (11, empty)))))
+    println(numbersSeq.zipWith(anotherNumbersSeq, (x, y) => x + y))
+
 
   }
 }
