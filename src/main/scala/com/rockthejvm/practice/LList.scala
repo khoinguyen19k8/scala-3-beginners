@@ -28,7 +28,7 @@ abstract class LList[A] {
   // forEach, sort, zip, etc
   def foreach(func: A => Unit): Unit
   def sort(compare: (A, A) => Int): LList[A]
-  def zipWith[B](another: LList[A], zip: (A, A) => B): LList[B]
+  def zipWith[B, T](another: LList[T], zip: (A, T) => B): LList[B]
   def foldLeft[B](start: B)(operator: (A, B) => B): B
 }
 
@@ -49,7 +49,7 @@ case class EmptyLList[A]() extends LList[A] {
 
   override def foreach(func: A => Unit): Unit = {}
   override def sort(compare: (A, A) => Int): LList[A] = this
-  override def zipWith[B](another: LList[A], zip: (A, A) => B): LList[B] = EmptyLList[B]()
+  override def zipWith[B, T](another: LList[T], zip: (A, T) => B): LList[B] = EmptyLList[B]()
   override def foldLeft[B](start: B)(operator: (A, B) => B): B = start
 
   }
@@ -115,7 +115,7 @@ case class Cons[A](override val head: A, override val tail: LList[A]) extends LL
     val sortedTail = tail.sort(compare)
     insert(head, sortedTail)
 
-  override def zipWith[B](another: LList[A], zip: (A, A) => B): LList[B] =
+  override def zipWith[B, T](another: LList[T], zip: (A, T) => B): LList[B] =
     if (this.length() != another.length()) throw new RuntimeException("Two lists of different length")
     else Cons[B](zip(this.head, another.head), this.tail.zipWith(another.tail, zip))
 
@@ -192,6 +192,7 @@ object LListTest {
     println("\n# zipWith testing\n")
     val anotherNumbersSeq: LList[Int] = Cons(6, Cons(3, Cons(18, Cons (2, Cons (11, empty)))))
     println(numbersSeq.zipWith(anotherNumbersSeq, (x, y) => x + y))
+    println(first3Numbers.zipWith[String, String](first3Strings, (num, str) => s"$num-$str"))
 
     println("\n# foldLeft testing\n")
     println(numbersSeq.foldLeft[Int](0)(_ + _))
