@@ -1,6 +1,7 @@
 package com.rockthejvm.practice
 
 import java.util.Currency
+import javax.sql.rowset.Predicate
 import scala.annotation.tailrec
 
 // singly linked list
@@ -19,6 +20,7 @@ abstract class LList[A] {
   // map, filter, flatMap
   def map[B](transformer: A => B): LList[B]
   def filter(predicate: A => Boolean): LList[A]
+  def withFilter(predicate: A => Boolean): LList[A] = filter(predicate)
   def flatMap[B](transformer: A => LList[B]): LList[B]
 
   // apply, length
@@ -199,6 +201,11 @@ object LListTest {
 
     println("\n# sort testing\n")
     println(numbersSeq.sort(_ - _))
+
+    println("\n for comprehension testing\n")
+    for {
+      elem <- numbersSeq
+    } println(elem)
 
 
   }
